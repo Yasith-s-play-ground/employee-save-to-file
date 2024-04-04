@@ -96,6 +96,13 @@ public class AddEmployeeViewController {
             loadFromFileToTable();
         } catch (IOException e) {
             System.out.println("Loading details from database failed");
+            new Alert(Alert.AlertType.ERROR, "Database is corrupted").show();
+            try {
+                createNewDatabaseFile(); // create new file if existing file is corrupted
+            } catch (IOException ex) {
+                System.out.println("Error creating database file");
+                ex.printStackTrace();
+            }
             e.printStackTrace();
         }
 
@@ -328,6 +335,11 @@ public class AddEmployeeViewController {
 
             bufferedWriter.write(employeeRecord);
         }
+    }
+
+    private void createNewDatabaseFile() throws IOException {
+        File file = new File(".employee.db");
+        file.createNewFile();
     }
 
 
