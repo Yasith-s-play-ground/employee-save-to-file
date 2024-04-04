@@ -146,7 +146,7 @@ public class AddEmployeeViewController {
 
     private boolean existsNic(String nic) {
         for (Employee employee : employeeList) {
-            if (!onceTriedToSave && employee.getNic().equals(nic)) return true;
+            if (!onceTriedToSave && employee.getNic().toUpperCase().equals(nic.toUpperCase())) return true;
         }
         return false;
     }
