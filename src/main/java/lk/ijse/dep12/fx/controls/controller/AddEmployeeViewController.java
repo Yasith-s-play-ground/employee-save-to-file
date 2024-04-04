@@ -66,24 +66,20 @@ public class AddEmployeeViewController {
         //adding change listener to table
         tblEmployee.getSelectionModel().selectedItemProperty().addListener((observable, previous, current) -> {
 
-            //if (current != null) System.out.println(current.getContacts());
             if (current != null) {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Do you want to update the selected employee?", ButtonType.YES, ButtonType.NO);
                 Optional<ButtonType> buttonType = alert.showAndWait();
                 if (buttonType.get() == ButtonType.YES) {
-//                    clearTheForm();
                     enableRequiredControls();
                     onceTriedToSave = true; // specify once tried to save
                     btnSaveOrUpdate.setText("Update");
 
-                    //Employee employee = current;
                     lblEmployeeId.setText(current.getId());
                     txtNIC.setText(current.getNic());
                     txtName.setText(current.getFullName());
                     txtAddress.setText(current.getAddress());
                     if (current.getGender().equals("Male")) rdButtonMale.setSelected(true);
                     else rdButtonFemale.setSelected(true);
-
 
                 } else {
                     btnDelete.setDisable(false);
@@ -116,7 +112,7 @@ public class AddEmployeeViewController {
         rdBtnGroupGender.selectToggle(null);
         mainGridPane.setDisable(true);
         btnNewEmployee.requestFocus();
-
+        //tblEmployee.getSelectionModel().clearSelection();
         btnDelete.setDisable(true);
     }
 
@@ -130,6 +126,16 @@ public class AddEmployeeViewController {
 
     private boolean isNICValid() {
         String nic = txtNIC.getText().strip();
+        if (nic.length() != 10) return false;
+        if (!(nic.endsWith("V") || nic.endsWith("v"))) return false;
+        for (int i = 0; i < nic.length() - 1; i++) {
+            if (!Character.isDigit(nic.charAt(i))) return false;
+        }
+        return true;
+    }
+
+    private boolean isNICValid(String nic) {
+
         if (nic.length() != 10) return false;
         if (!(nic.endsWith("V") || nic.endsWith("v"))) return false;
         for (int i = 0; i < nic.length() - 1; i++) {
@@ -157,8 +163,23 @@ public class AddEmployeeViewController {
         return true;
     }
 
+    private boolean isNameValid(String name) {
+        if (name.length() < 3) return false;
+        //check characters as an array
+        for (char c : name.toCharArray()) {
+            if (!(Character.isLetter(c) || Character.isSpaceChar(c))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private boolean isAddressValid() {
         String address = txtAddress.getText();
+        return address.isEmpty() || address.strip().length() >= 4;
+    }
+
+    private boolean isAddressValid(String address) {
         return address.isEmpty() || address.strip().length() >= 4;
     }
 
@@ -317,6 +338,13 @@ public class AddEmployeeViewController {
             while ((employeeRecord = bufferedReader.readLine()) != null) {
                 String[] empDetails = employeeRecord.split(";");
                 Employee employee = new Employee(empDetails[0], empDetails[1], empDetails[2], empDetails[3], empDetails[4].replace("\n", ""));
+                if (!isNICValid(employee.getNic()) || !isNameValid(employee.getFullName()) || !isAddressValid(employee.getAddress()) || !(employee.getGender().equals("Male") || (employee.getGender().equals("Female")))) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Database file is corrupted, creating a new file!");
+                    alert.show();
+                    employeeList.clear(); // clear the filled data in table
+                    createNewDatabaseFile(); // create new file if file is corrupted
+                    return; // stop loading if file is corrupted
+                }
                 employeeList.add(employee);
             }
 
@@ -339,6 +367,7 @@ public class AddEmployeeViewController {
 
     private void createNewDatabaseFile() throws IOException {
         File file = new File(".employee.db");
+        file.delete();
         file.createNewFile();
     }
 
