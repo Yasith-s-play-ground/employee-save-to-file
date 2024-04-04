@@ -1,5 +1,6 @@
 package lk.ijse.dep12.fx.controls.controller;
 
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
@@ -355,10 +356,14 @@ public class AddEmployeeViewController {
     }
 
     private void showAlertForCorruptedDatabase() throws IOException {
-        Alert alert = new Alert(Alert.AlertType.ERROR, "Database file is corrupted, creating a new file!");
-        alert.showAndWait();
-        employeeList.clear(); // clear the filled data in table
-        createNewDatabaseFile(); // create new file if file is corrupted
+        Alert alert = new Alert(Alert.AlertType.ERROR, "Database file is corrupted, Do you want to reinitialize the database?", ButtonType.YES, ButtonType.NO);
+        Optional<ButtonType> buttonType = alert.showAndWait();
+        if (buttonType.get() == ButtonType.YES) {
+            employeeList.clear(); // clear the filled data in table
+            createNewDatabaseFile(); // create new file if file is corrupted
+        } else {
+            Platform.exit(); // if user select no, exit from the program
+        }
     }
 
     private void deleteEmployeeFromFile(Employee deletingEmployee) throws IOException {
