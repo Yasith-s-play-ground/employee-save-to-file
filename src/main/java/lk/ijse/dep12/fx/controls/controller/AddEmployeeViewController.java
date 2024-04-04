@@ -35,6 +35,8 @@ public class AddEmployeeViewController {
     ObservableList<Employee> employeeList;
     private boolean onceTriedToSave = false;
 
+    private File DB_FILE = new File(".employee.db");
+
     public void initialize() {
         mainGridPane.setDisable(true);
         btnNewEmployee.requestFocus();
@@ -319,23 +321,21 @@ public class AddEmployeeViewController {
     }
 
     private void writeDataToFile(Employee employee) throws IOException {
-        File file = new File(".employee.db");
-        if (!file.exists()) file.createNewFile();
+        if (!DB_FILE.exists()) DB_FILE.createNewFile();
 
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, true))) {
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(DB_FILE, true))) {
             String employeeRecord = employee.getId() + ";" + employee.getNic() + ";" + employee.getFullName() + ";" + employee.getAddress() + ";" + employee.getGender() + "\n";
             bufferedWriter.write(employeeRecord);
         }
     }
 
     private void loadFromFileToTable() throws IOException {
-        File file = new File(".employee.db");
-        if (!file.exists()) {
-            file.createNewFile();
+        if (!DB_FILE.exists()) {
+            DB_FILE.createNewFile();
             return;
         }
 
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(DB_FILE))) {
             String employeeRecord;
             while ((employeeRecord = bufferedReader.readLine()) != null) {
                 String[] empDetails = employeeRecord.split(";");
@@ -362,11 +362,9 @@ public class AddEmployeeViewController {
     }
 
     private void deleteEmployeeFromFile(Employee deletingEmployee) throws IOException {
-        File file = new File(".employee.db");
-        if (!file.exists()) file.createNewFile();
 
         String employeeRecord = "";
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file))) {
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(DB_FILE))) {
             for (Employee employee : employeeList) {
                 if (employee.getId().equals(deletingEmployee.getId())) continue;
                 employeeRecord += employee.getId() + ";" + employee.getNic() + ";" + employee.getFullName() + ";" + employee.getAddress() + ";" + employee.getGender() + "\n";
@@ -377,9 +375,8 @@ public class AddEmployeeViewController {
     }
 
     private void createNewDatabaseFile() throws IOException {
-        File file = new File(".employee.db");
-        file.delete();
-        file.createNewFile();
+        DB_FILE.delete();
+        DB_FILE.createNewFile();
     }
 
 
