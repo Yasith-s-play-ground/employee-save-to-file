@@ -92,7 +92,7 @@ public class AddEmployeeViewController {
             loadFromFileToTable();
         } catch (IOException e) {
             System.out.println("Loading details from database failed");
-            new Alert(Alert.AlertType.ERROR, "Database is corrupted").show();
+            new Alert(Alert.AlertType.ERROR, "Database is corrupted").showAndWait();
             try {
                 createNewDatabaseFile(); // create new file if existing file is corrupted
             } catch (IOException ex) {
@@ -337,18 +337,26 @@ public class AddEmployeeViewController {
             String employeeRecord;
             while ((employeeRecord = bufferedReader.readLine()) != null) {
                 String[] empDetails = employeeRecord.split(";");
-                Employee employee = new Employee(empDetails[0], empDetails[1], empDetails[2], empDetails[3], empDetails[4].replace("\n", ""));
-                if (!isNICValid(employee.getNic()) || !isNameValid(employee.getFullName()) || !isAddressValid(employee.getAddress()) || !(employee.getGender().equals("Male") || (employee.getGender().equals("Female")))) {
-                    Alert alert = new Alert(Alert.AlertType.ERROR, "Database file is corrupted, creating a new file!");
-                    alert.show();
-                    employeeList.clear(); // clear the filled data in table
-                    createNewDatabaseFile(); // create new file if file is corrupted
-                    return; // stop loading if file is corrupted
+                try {
+                    Employee employee = new Employee(empDetails[0], empDetails[1], empDetails[2], empDetails[3], empDetails[4].replace("\n", ""));
+                    if (!isNICValid(employee.getNic()) || !isNameValid(employee.getFullName()) || !isAddressValid(employee.getAddress()) || !(employee.getGender().equals("Male") || (employee.getGender().equals("Female")))) {
+                        showAlertForCorruptedDatabase();
+                        return; // stop loading if file is corrupted
+                    }
+                    employeeList.add(employee);
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    showAlertForCorruptedDatabase();
                 }
-                employeeList.add(employee);
             }
 
         }
+    }
+
+    private void showAlertForCorruptedDatabase() throws IOException {
+        Alert alert = new Alert(Alert.AlertType.ERROR, "Database file is corrupted, creating a new file!");
+        alert.showAndWait();
+        employeeList.clear(); // clear the filled data in table
+        createNewDatabaseFile(); // create new file if file is corrupted
     }
 
     private void deleteEmployeeFromFile() throws IOException {
