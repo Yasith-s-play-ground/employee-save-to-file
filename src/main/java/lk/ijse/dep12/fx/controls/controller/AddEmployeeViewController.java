@@ -265,38 +265,40 @@ public class AddEmployeeViewController {
 //        }
         //if updating
         if (onceTriedToSave) {
-            employeeList.remove(tblEmployee.getSelectionModel().getSelectedItem());
             try {
                 //to remove update employee from file
-                deleteEmployeeFromFile();
+                deleteEmployeeFromFile(employee);
             } catch (IOException e) {
                 System.out.println("Deleting of updating employee failed");
                 e.printStackTrace();
             }
+            employeeList.remove(tblEmployee.getSelectionModel().getSelectedItem()); //remove from table after deleting from file
+
 
         }
-        employeeList.add(employee);
         try {
             writeDataToFile(employee);
         } catch (IOException e) {
             System.out.println("File writing failed");
             e.printStackTrace();
         }
+        employeeList.add(employee); // add to table after saving to file
+
         onceTriedToSave = false;
         btnSaveOrUpdate.setText("Save");
         clearTheForm();
     }
 
     public void btnDeleteOnAction(ActionEvent actionEvent) {
-        //Employee employee = tblEmployee.getSelectionModel().getSelectedItem();
-        employeeList.remove(tblEmployee.getSelectionModel().getSelectedItem());
-        tblEmployee.getSelectionModel().clearSelection();
+        Employee employee = tblEmployee.getSelectionModel().getSelectedItem();
         try {
-            deleteEmployeeFromFile();
+            deleteEmployeeFromFile(employee);
         } catch (IOException e) {
             System.out.println("Employee deletion failed");
             e.printStackTrace();
         }
+        employeeList.remove(tblEmployee.getSelectionModel().getSelectedItem()); // delete from table after updating in file
+        tblEmployee.getSelectionModel().clearSelection();
         // generate employee id again if already was trying to enter a new employee while deleting existing one
         if (!lblEmployeeId.getText().isEmpty()) {
             lblEmployeeId.setText(generateEmployeeId());
@@ -359,13 +361,14 @@ public class AddEmployeeViewController {
         createNewDatabaseFile(); // create new file if file is corrupted
     }
 
-    private void deleteEmployeeFromFile() throws IOException {
+    private void deleteEmployeeFromFile(Employee deletingEmployee) throws IOException {
         File file = new File(".employee.db");
         if (!file.exists()) file.createNewFile();
 
         String employeeRecord = "";
         try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file))) {
             for (Employee employee : employeeList) {
+                if (employee.getId().equals(deletingEmployee.getId())) continue;
                 employeeRecord += employee.getId() + ";" + employee.getNic() + ";" + employee.getFullName() + ";" + employee.getAddress() + ";" + employee.getGender() + "\n";
             }
 
