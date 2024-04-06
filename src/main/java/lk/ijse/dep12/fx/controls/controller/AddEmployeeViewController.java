@@ -12,6 +12,7 @@ import javafx.scene.layout.GridPane;
 import lk.ijse.dep12.fx.controls.Employee;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Optional;
 
 public class AddEmployeeViewController {
@@ -269,27 +270,61 @@ public class AddEmployeeViewController {
         //if updating
         if (onceTriedToSave) {
             try {
-                //to remove update employee from file
-                deleteEmployeeFromFile(employee);
+                //to update employee and write the whole list again to file
+                updateSelectedEmployee(employee);
             } catch (IOException e) {
-                System.out.println("Deleting of updating employee failed");
+                System.out.println("Updating employee failed");
                 e.printStackTrace();
             }
-            employeeList.remove(tblEmployee.getSelectionModel().getSelectedItem()); //remove from table after deleting from file
+            //employeeList.remove(tblEmployee.getSelectionModel().getSelectedItem()); //remove from table after deleting from file
 
 
+        } else {
+            try {
+                writeDataToFile(employee);
+            } catch (IOException e) {
+                System.out.println("File writing failed");
+                e.printStackTrace();
+            }
+            employeeList.add(employee); // add to table after saving to file
         }
-        try {
-            writeDataToFile(employee);
-        } catch (IOException e) {
-            System.out.println("File writing failed");
-            e.printStackTrace();
-        }
-        employeeList.add(employee); // add to table after saving to file
 
         onceTriedToSave = false;
         btnSaveOrUpdate.setText("Save");
         clearTheForm();
+    }
+
+    private void updateSelectedEmployee(Employee updateEmployee) throws IOException {
+        ArrayList<Employee> employees = new ArrayList<>(); // create a new list to store employees for updating the selected one
+        employees.addAll(employeeList); // copy all in observable list to new list
+
+        for (Employee employee : employees) {
+            if (employee.getId().equals(updateEmployee.getId())) {
+                employee.setFullName(updateEmployee.getFullName());
+                employee.setNic(updateEmployee.getNic());
+                employee.setAddress(updateEmployee.getAddress());
+                employee.setGender(updateEmployee.getGender());
+                break; // break after updating the details of selected employee
+            }
+        }
+
+        //write the list again to file
+        String employeeRecord = "";
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(DB_FILE))) {
+            for (Employee employee : employees) {
+                employeeRecord += employee.getId() + ";" + employee.getNic() + ";" + employee.getFullName() + ";" + employee.getAddress() + ";" + employee.getGender() + "\n";
+            }
+
+            bufferedWriter.write(employeeRecord);
+            System.out.println("employee record written to file");
+        }
+
+        // if file was updated correctly, again we update the observable list with new details
+        employeeList.clear(); // clear the observable list
+
+        employeeList.addAll(employees); // add all Employee objects in employees arraylist to observable list of table
+
+
     }
 
     public void btnDeleteOnAction(ActionEvent actionEvent) {
